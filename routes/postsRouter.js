@@ -4,10 +4,12 @@ const controller = require('../controllers/postsController')
 const commentController = require('../controllers/commentsController');
 const getToken = require('../middleware/getToken');
 const verifyToken = require('../middleware/verifyToken');
+const softGetToken = require('../middleware/softGetToken');
+const softVerifyToken = require('../middleware/softVerifyToken');
 
 router.get('/posts', controller.getAllPosts);
 
-router.get('/posts/:postid', controller.getPostById);
+router.get('/posts/:postid', softGetToken, softVerifyToken, controller.getPostById);
 
 router.post('/posts', getToken, verifyToken, controller.createPost);
 

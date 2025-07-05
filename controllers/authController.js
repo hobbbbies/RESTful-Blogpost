@@ -65,7 +65,18 @@ const loginUser = async (req, res) => {
   }
 };
 
+deleteUser = async (req, res) => {
+  try {
+    const userid = req.user.id;
+    await prisma.user.delete({ where: { id: userid } });
+    res.status(200).json({ success: true, message: 'User account and all associated data have been deleted successfully.' });
+  } catch (error) {
+      res.status(500).json({ success: false, message: 'Server error during user delete.', error: error.message });
+  }
+}
+
 module.exports = {
   registerUser,
   loginUser,
+  deleteUser
 };

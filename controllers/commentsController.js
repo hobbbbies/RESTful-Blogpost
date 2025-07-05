@@ -131,7 +131,7 @@ const updateComment = async (req, res) => {
         id: commentid
       },
       data: {
-        content: content ?? Prisma.skip,
+        content: content || undefined,
       }
     })
     res.status(200).json({

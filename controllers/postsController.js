@@ -5,6 +5,9 @@ const prisma = new PrismaClient();
 const getAllPosts = async (req, res) => {
   try {
     const posts = await prisma.post.findMany({
+      where: {
+        published: true,
+      },
       include: {
         author: {
           select: {
@@ -35,9 +38,11 @@ const getAllPosts = async (req, res) => {
 
 const getPostById = async (req, res) => {
   try {
+    const userid = req.user?.id;
+    const postid = parseInt(req.params.postid);
     const post = await prisma.post.findUnique({
       where: {
-        id: parseInt(req.params.postid),
+        id: postid,
       },
       include: {
         author: {
@@ -69,6 +74,16 @@ const getPostById = async (req, res) => {
       });
     }
 
+    if (!post.published) {
+      // Allow access ONLY if the logged-in user is the author
+      if (userid && post.authorId === userid) {
+        return res.status(200).json({ success: true, data: post });
+      } else {
+        // For everyone else, pretend it doesn't exist
+        return res.status(404).json({ success: false, message: "Post not found" });
+      }
+    }
+
     res.status(200).json({
       success: true,
       data: post,
@@ -85,8 +100,8 @@ const getPostById = async (req, res) => {
 
 const createPost = async (req, res) => {
   try {
-    const { title, content } = req.body;
-    
+    const { title, content, published } = req.body;
+
     if (!title || !req.user.id) {
       return res
         .status(400)
@@ -98,6 +113,7 @@ const createPost = async (req, res) => {
         title: title,
         content: content,
         authorId: parseInt(req.user.id),
+        published: published || undefined,
       },
     });
 
@@ -143,8 +159,8 @@ const updatePost = async (req, res) => {
         id: parseInt(postid),
       },
       data: {
-        title: title ?? Prisma.skip,
-        content: content ?? Prisma.skip,
+        title: title || undefined,
+        content: content || undefined,
       },
     });
     res.status(200).json({
