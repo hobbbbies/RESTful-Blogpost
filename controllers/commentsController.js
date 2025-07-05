@@ -1,11 +1,9 @@
 const { PrismaClient } = require('../generated/prisma');
 const prisma = new PrismaClient();
 
-// Get all posts
-const getAllPosts = async (req, res) => {
-  try {
-    const posts = await prisma.post.findMany({
-      include: {
+const getAllComments = async (req, res) => {
+    try {
+    const comments = await prisma.comment.findMany({
         // author: {
         //   select: {
         //     id: true,
@@ -13,10 +11,10 @@ const getAllPosts = async (req, res) => {
         //     email: true
         //   }
         // },
-        comments: {
-          select: {
+        select: {
             id: true,
             content: true,
+            postId: true
             // author: {
             //   select: {
             //     id: true,
@@ -25,8 +23,6 @@ const getAllPosts = async (req, res) => {
             //   },
             // },
           },
-        },
-      },
       orderBy: {
         createdAt: 'desc'
       }
@@ -34,36 +30,35 @@ const getAllPosts = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      data: posts
+      data: comments
     });
   } catch (error) {
-    console.error('Error fetching posts:', error);
+    console.error('Error fetching comments:', error);
     res.status(500).json({
       success: false,
-      message: 'Error fetching posts',
+      message: 'Error fetching comments',
       error: error.message
     });
   }
-};
+}
 
-const getPostById = async (req, res) => {
-  try {
-    const post = await prisma.post.findUnique({
-      where: {
-        id: parseInt(req.params.postid),
-      },
-      include: {
+const getCommentById = async (req, res) => {
+    try {
+    const comment = await prisma.comment.findUnique({
+        where: {
+            id: parseInt(req.params.commentid),
+        },
         // author: {
         //   select: {
         //     id: true,
         //     username: true,
         //     email: true
-        //   },
+        //   }
         // },
-        comments: {
-          select: {
+        select: {
             id: true,
             content: true,
+            postId: true
             // author: {
             //   select: {
             //     id: true,
@@ -72,62 +67,53 @@ const getPostById = async (req, res) => {
             //   },
             // },
           },
-        },
-      },
     });
-
-    if (!post) {
-      return res.status(404).json({
-        success: false,
-        message: 'Post not found'
-      });
-    }
 
     res.status(200).json({
       success: true,
-      data: post
+      data: comment
     });
   } catch (error) {
-    console.error('Error fetching posts:', error);
+    console.error('Error fetching comments:', error);
     res.status(500).json({
       success: false,
-      message: 'Error fetching posts',
-      error: error.message
-    });
-  }
-};
-
-const createPost = async (req, res) => {
-  try {
-    const post = await prisma.post.create({
-      data: {
-        title: req.body.title,
-        content: req.body.content,
-      }
-    })
-
-    res.status(200).json({
-      success: true,
-      data: post
-    });
-  } catch(error) {
-    res.status(500).json({
-      success: false,
-      message: 'Error creating post',
+      message: 'Error fetching comments',
       error: error.message
     });
   }
 }
 
-const updatePost = async (req, res) => {
+const createComment = async (req, res) => {
+    try {
+    const comment = await prisma.comment.create({
+        data: {
+            content: req.body.content,
+            postId: parseInt(req.params.postid)
+        }
+    })
+
+    res.status(200).json({
+      success: true,
+      data: comment
+    });
+    } catch (error) {
+    console.error('Error creating comment:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error creating comment',
+      error: error.message
+    });
+  }
+}
+
+const updateComment = async (req, res) => {
   try {
-    const update = await prisma.post.update({
+    const update = await prisma.comment.update({
       where: {
-        id: parseInt(req.params.postid)
+        id: parseInt(req.params.commentid)
       },
       data: {
-        title: req.body.title ?? prisma.skip,
-        content: req.body.content ?? prisma.skip,
+        content: req.body.content || undefined,
       }
     })
     res.status(200).json({
@@ -137,36 +123,36 @@ const updatePost = async (req, res) => {
   } catch(error) {
     res.status(500).json({
       success: false,
-      message: 'Error updating post',
+      message: 'Error updating comment',
       error: error.message
     });
   }
 }
 
-const deletePost = async (req, res) => {
+const deleteComment = async (req, res) => {
     try {
-    const deletePost = await prisma.post.delete({
+    const deleteComment = await prisma.comment.delete({
       where: {
-        id: parseInt(req.params.postid)
+        id: parseInt(req.params.commentid)
       }
     })
     res.status(200).json({
       success: true,
-      data: deletePost
+      data: deleteComment
     })
   } catch(error) {
     res.status(500).json({
       success: false,
-      message: 'Error deleting post',
+      message: 'Error deleting comment',
       error: error.message
     });
   }
 }
-
+  
 module.exports = {
-  getAllPosts,
-  getPostById,
-  createPost,
-  updatePost,
-  deletePost
-};
+    getAllComments,
+    createComment,
+    updateComment,
+    deleteComment,
+    getCommentById
+}
