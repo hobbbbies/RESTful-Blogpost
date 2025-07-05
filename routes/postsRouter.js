@@ -2,12 +2,14 @@ const express = require("express");
 const router = express.Router();
 const controller = require('../controllers/postsController')
 const commentController = require('../controllers/commentsController');
+const getToken = require('../middleware/getToken');
+const verifyToken = require('../middleware/verifyToken');
 
 router.get('/posts', controller.getAllPosts);
 
 router.get('/posts/:postid', controller.getPostById);
 
-router.post('/posts', controller.createPost);
+router.post('/posts', getToken, verifyToken, controller.createPost);
 
 router.put('/posts/:postid', controller.updatePost);
 

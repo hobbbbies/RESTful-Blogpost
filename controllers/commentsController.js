@@ -113,7 +113,7 @@ const updateComment = async (req, res) => {
         id: parseInt(req.params.commentid)
       },
       data: {
-        content: req.body.content || undefined,
+        content: req.body.content ?? Prisma.skip,
       }
     })
     res.status(200).json({

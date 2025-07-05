@@ -14,54 +14,27 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// --- Existing models commented out for testing ---
+// --- Restored Models with User Relationships ---
 
-// model User {
-//   id        Int       @id @default(autoincrement())
-//   username  String    @unique
-//   email     String    @unique
-//   password  String
-//   posts     Post[]
-//   comments  Comment[]
-//   createdAt DateTime  @default(now())
-//
-//   @@map("users")
-// }
-//
-// model Post {
-//   id        Int       @id @default(autoincrement())
-//   title     String
-//   content   String?
-//   published Boolean   @default(false)
-//   author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
-//   authorId  Int
-//   comments  Comment[]
-//   createdAt DateTime  @default(now())
-//   updatedAt DateTime  @updatedAt
-//
-//   @@map("posts")
-// }
-//
-// model Comment {
-//   id        Int      @id @default(autoincrement())
-//   content   String
-//   post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
-//   postId    Int
-//   author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
-//   authorId  Int
-//   createdAt DateTime @default(now())
-//
-//   @@map("comments")
-// }
+model User {
+  id        Int       @id @default(autoincrement())
+  username  String    @unique
+  email     String    @unique
+  password  String
+  posts     Post[]
+  comments  Comment[]
+  createdAt DateTime  @default(now())
 
-
-// --- New simplified models for testing ---
+  @@map("users")
+}
 
 model Post {
   id        Int       @id @default(autoincrement())
   title     String
   content   String?
   published Boolean   @default(false)
+  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId  Int
   comments  Comment[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -74,7 +47,10 @@ model Comment {
   content   String
   post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
   postId    Int
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId  Int
   createdAt DateTime @default(now())
+  updatedAt DateTime  @updatedAt
 
   @@map("comments")
 }

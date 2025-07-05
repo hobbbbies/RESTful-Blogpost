@@ -6,25 +6,12 @@ const getAllPosts = async (req, res) => {
   try {
     const posts = await prisma.post.findMany({
       include: {
-        // author: {
-        //   select: {
-        //     id: true,
-        //     username: true,
-        //     email: true
-        //   }
-        // },
-        comments: {
+        author: {
           select: {
             id: true,
-            content: true,
-            // author: {
-            //   select: {
-            //     id: true,
-            //     username: true,
-            //     email: true,
-            //   },
-            // },
-          },
+            username: true,
+            email: true
+          }
         },
       },
       orderBy: {
@@ -53,24 +40,23 @@ const getPostById = async (req, res) => {
         id: parseInt(req.params.postid),
       },
       include: {
-        // author: {
-        //   select: {
-        //     id: true,
-        //     username: true,
-        //     email: true
-        //   },
-        // },
+        author: {
+          select: {
+            id: true,
+            username: true,
+            email: true
+          },
+        },
         comments: {
           select: {
             id: true,
             content: true,
-            // author: {
-            //   select: {
-            //     id: true,
-            //     username: true,
-            //     email: true,
-            //   },
-            // },
+            author: {
+              select: {
+                id: true,
+                username: true,
+              },
+            },
           },
         },
       },
@@ -99,10 +85,15 @@ const getPostById = async (req, res) => {
 
 const createPost = async (req, res) => {
   try {
+    if (!title || !authorId) {
+      return res.status(400).json({ success: false, message: 'Title and authorId are required.' });
+    }
+
     const post = await prisma.post.create({
       data: {
         title: req.body.title,
         content: req.body.content,
+        authorId: parseInt(req.body.authorid),
       }
     })
 
@@ -126,8 +117,8 @@ const updatePost = async (req, res) => {
         id: parseInt(req.params.postid)
       },
       data: {
-        title: req.body.title ?? prisma.skip,
-        content: req.body.content ?? prisma.skip,
+        title: req.body.title ?? Prisma.skip,
+        content: req.body.content ?? Prisma.skip,
       }
     })
     res.status(200).json({
