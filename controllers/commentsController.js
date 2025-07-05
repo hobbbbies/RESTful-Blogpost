@@ -4,24 +4,17 @@ const prisma = new PrismaClient();
 const getAllComments = async (req, res) => {
     try {
     const comments = await prisma.comment.findMany({
-        // author: {
-        //   select: {
-        //     id: true,
-        //     username: true,
-        //     email: true
-        //   }
-        // },
         select: {
             id: true,
             content: true,
-            postId: true
-            // author: {
-            //   select: {
-            //     id: true,
-            //     username: true,
-            //     email: true,
-            //   },
-            // },
+            postId: true,
+            author: {
+              select: {
+                id: true,
+                username: true,
+                email: true,
+              },
+            },
           },
       orderBy: {
         createdAt: 'desc'
@@ -48,24 +41,17 @@ const getCommentById = async (req, res) => {
         where: {
             id: parseInt(req.params.commentid),
         },
-        // author: {
-        //   select: {
-        //     id: true,
-        //     username: true,
-        //     email: true
-        //   }
-        // },
         select: {
             id: true,
             content: true,
-            postId: true
-            // author: {
-            //   select: {
-            //     id: true,
-            //     username: true,
-            //     email: true,
-            //   },
-            // },
+            postId: true,
+            author: {
+              select: {
+                id: true,
+                username: true,
+                email: true,
+              },
+            },
           },
     });
 
@@ -85,10 +71,20 @@ const getCommentById = async (req, res) => {
 
 const createComment = async (req, res) => {
     try {
+    const { content } = req.body;
+    const userid = parseInt(req.user.id);
+    const postid = parseInt(req.params.postid);
+    if (!comment || !userid) {
+        return res
+            .status(400)
+            .json({ success: false, message: "Title and authorId are required." });
+    }
+
     const comment = await prisma.comment.create({
         data: {
-            content: req.body.content,
-            postId: parseInt(req.params.postid)
+            content: content,
+            postId: postid,
+            authorId: userid,
         }
     })
 
@@ -108,12 +104,34 @@ const createComment = async (req, res) => {
 
 const updateComment = async (req, res) => {
   try {
+    const { content } = req.body;
+    const commentid = parseInt(req.params.commentid);
+    const userid = req.user.id;
+    const comment = await prisma.comment.findUnique({
+      where: { id: commentid },
+    });
+
+    if (!comment) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Comment not found." });
+    }
+
+    if (comment.authorId !== userid) {
+      return res
+        .status(403)
+        .json({
+          success: false,
+          message: "User not authorized to update this comment.",
+        });
+    }
+
     const update = await prisma.comment.update({
       where: {
-        id: parseInt(req.params.commentid)
+        id: commentid
       },
       data: {
-        content: req.body.content ?? Prisma.skip,
+        content: content ?? Prisma.skip,
       }
     })
     res.status(200).json({
@@ -131,9 +149,31 @@ const updateComment = async (req, res) => {
 
 const deleteComment = async (req, res) => {
     try {
+    const { content } = req.body;
+    const commentid = parseInt(req.params.commentid);
+    const userid = req.user.id;
+    const comment = await prisma.comment.findUnique({
+      where: { id: commentid },
+    });
+
+    if (!comment) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Comment not found." });
+    }
+
+    if (comment.authorId !== userid) {
+      return res
+        .status(403)
+        .json({
+          success: false,
+          message: "User not authorized to delete this comment.",
+        });
+    }
+
     const deleteComment = await prisma.comment.delete({
       where: {
-        id: parseInt(req.params.commentid)
+        id: commentid
       }
     })
     res.status(200).json({
@@ -148,7 +188,7 @@ const deleteComment = async (req, res) => {
     });
   }
 }
-  
+
 module.exports = {
     getAllComments,
     createComment,

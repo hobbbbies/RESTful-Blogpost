@@ -1,4 +1,4 @@
-const { PrismaClient } = require('../generated/prisma');
+const { PrismaClient } = require("../generated/prisma");
 const prisma = new PrismaClient();
 
 // Get all posts
@@ -10,25 +10,25 @@ const getAllPosts = async (req, res) => {
           select: {
             id: true,
             username: true,
-            email: true
-          }
+            email: true,
+          },
         },
       },
       orderBy: {
-        createdAt: 'desc'
-      }
+        createdAt: "desc",
+      },
     });
 
     res.status(200).json({
       success: true,
-      data: posts
+      data: posts,
     });
   } catch (error) {
-    console.error('Error fetching posts:', error);
+    console.error("Error fetching posts:", error);
     res.status(500).json({
       success: false,
-      message: 'Error fetching posts',
-      error: error.message
+      message: "Error fetching posts",
+      error: error.message,
     });
   }
 };
@@ -44,7 +44,7 @@ const getPostById = async (req, res) => {
           select: {
             id: true,
             username: true,
-            email: true
+            email: true,
           },
         },
         comments: {
@@ -65,99 +65,146 @@ const getPostById = async (req, res) => {
     if (!post) {
       return res.status(404).json({
         success: false,
-        message: 'Post not found'
+        message: "Post not found",
       });
     }
 
     res.status(200).json({
       success: true,
-      data: post
+      data: post,
     });
   } catch (error) {
-    console.error('Error fetching posts:', error);
+    console.error("Error fetching posts:", error);
     res.status(500).json({
       success: false,
-      message: 'Error fetching posts',
-      error: error.message
+      message: "Error fetching posts",
+      error: error.message,
     });
   }
 };
 
 const createPost = async (req, res) => {
   try {
-    if (!title || !authorId) {
-      return res.status(400).json({ success: false, message: 'Title and authorId are required.' });
+    const { title, content } = req.body;
+    
+    if (!title || !req.user.id) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Title and authorId are required." });
     }
 
     const post = await prisma.post.create({
       data: {
-        title: req.body.title,
-        content: req.body.content,
-        authorId: parseInt(req.body.authorid),
-      }
-    })
+        title: title,
+        content: content,
+        authorId: parseInt(req.user.id),
+      },
+    });
 
     res.status(200).json({
       success: true,
-      data: post
+      data: post,
     });
-  } catch(error) {
+  } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Error creating post',
-      error: error.message
+      message: "Error creating post",
+      error: error.message,
     });
   }
-}
+};
 
 const updatePost = async (req, res) => {
   try {
+    const { title, content } = req.body;
+    const postid = parseInt(req.params.postid);
+    const userid = req.user.id;
+    const post = await prisma.post.findUnique({
+      where: { id: postid },
+    });
+
+    if (!post) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Post not found." });
+    }
+
+    if (post.authorId !== userid) {
+      return res
+        .status(403)
+        .json({
+          success: false,
+          message: "User not authorized to update this post.",
+        });
+    }
+
     const update = await prisma.post.update({
       where: {
-        id: parseInt(req.params.postid)
+        id: parseInt(postid),
       },
       data: {
-        title: req.body.title ?? Prisma.skip,
-        content: req.body.content ?? Prisma.skip,
-      }
-    })
+        title: title ?? Prisma.skip,
+        content: content ?? Prisma.skip,
+      },
+    });
     res.status(200).json({
       success: true,
-      data: update
-    })
-  } catch(error) {
+      data: update,
+    });
+  } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Error updating post',
-      error: error.message
+      message: "Error updating post",
+      error: error.message,
     });
   }
-}
+};
 
 const deletePost = async (req, res) => {
-    try {
+  try {
+    const postid = parseInt(req.params.postid);
+    const userid = req.user.id;
+    const post = await prisma.post.findUnique({
+      where: { id: postid },
+    });
+
+    if (!post) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Post not found." });
+    }
+
+    if (post.authorId !== userid) {
+      return res
+        .status(403)
+        .json({
+          success: false,
+          message: "User not authorized to delete this post.",
+        });
+    }
+
     const deletePost = await prisma.post.delete({
       where: {
-        id: parseInt(req.params.postid)
-      }
-    })
+        id: postid,
+      },
+    });
     res.status(200).json({
       success: true,
-      data: deletePost
-    })
-  } catch(error) {
+      data: deletePost,
+    });
+  } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Error deleting post',
-      error: error.message
+      message: "Error deleting post",
+      error: error.message,
     });
   }
-}
+};
 
 module.exports = {
   getAllPosts,
   getPostById,
   createPost,
   updatePost,
-  deletePost
+  deletePost,
 };

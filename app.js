@@ -1,11 +1,13 @@
 // app.js
 const express = require("express");
 const app = express();
-const postsRouter = require("./routes/postsRouter");
 const session = require('express-session');
 const PORT = process.env.PORT || 3000;
 const { PrismaClient } = require('./generated/prisma')
 const prisma = new PrismaClient()
+
+const postsRouter = require("./routes/postsRouter");
+const authRouter = require('./routes/authRouter');
 
 require('dotenv').config();
 app.set("view engine", "ejs");
@@ -21,7 +23,9 @@ app.use(session({
     resave: false,
     cookie: {maxAge: 30 * 24 * 60 * 60 * 1000 },
 }));
+
 app.use("/", postsRouter); 
+app.use('/auth', authRouter);
 
 async function main() {
     try {

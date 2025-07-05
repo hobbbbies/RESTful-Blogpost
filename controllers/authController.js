@@ -45,9 +45,9 @@ const loginUser = async (req, res) => {
 
     if (user && (await bcrypt.compare(password, user.password))) {
       // Passwords match, create token
-      const token = jwt.sign(
+      const token =   jwt.sign(
         { id: user.id, username: user.username }, // Payload
-        process.env.JWT_SECRET,                   // Secret
+        process.env.JWT_SECRET_KEY,                   // Secret
         { expiresIn: "1h" }                       // Expiration
       );
       

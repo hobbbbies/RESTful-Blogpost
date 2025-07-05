@@ -11,18 +11,18 @@ router.get('/posts/:postid', controller.getPostById);
 
 router.post('/posts', getToken, verifyToken, controller.createPost);
 
-router.put('/posts/:postid', controller.updatePost);
+router.put('/posts/:postid', getToken, verifyToken, controller.updatePost);
 
-router.delete('/posts/:postid', controller.deletePost);
+router.delete('/posts/:postid', getToken, verifyToken, controller.deletePost);
 
 router.get('/posts/:postid/comments', commentController.getAllComments);
 
 router.get('/posts/:postid/comments/:commentid', commentController.getCommentById)
 
-router.post('/posts/:postid/comments', commentController.createComment)
+router.post('/posts/:postid/comments', getToken, verifyToken, commentController.createComment)
 
-router.put('/posts/:postid/comments/:commentid', commentController.updateComment);
+router.put('/posts/:postid/comments/:commentid', getToken, verifyToken, commentController.updateComment);
 
-router.delete('/posts/:postid/comments/:commentid', commentController.deleteComment);
+router.delete('/posts/:postid/comments/:commentid', getToken, verifyToken, commentController.deleteComment);
 
 module.exports = router;
