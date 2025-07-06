@@ -5,24 +5,19 @@ const session = require('express-session');
 const PORT = process.env.PORT || 3000;
 const { PrismaClient } = require('./generated/prisma')
 const prisma = new PrismaClient()
+const cors = require('cors');
 
 const postsRouter = require("./routes/postsRouter");
 const authRouter = require('./routes/authRouter');
 
 require('dotenv').config();
-app.set("view engine", "ejs");
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-app.use(session({
-    store: new (require('connect-pg-simple')(session))({
-        conString: process.env.DATABASE_URL
-    }),
-    saveUninitialized: false,
-    secret: process.env.SECRET,
-    resave: false,
-    cookie: {maxAge: 30 * 24 * 60 * 60 * 1000 },
-}));
+const corsOptions = {
+    origin: 'http://localhost:3000',
+    optionSucessStatus: 200
+}
+app.use(cors(corsOptions));
 
 app.use("/", postsRouter); 
 app.use('/auth', authRouter);
